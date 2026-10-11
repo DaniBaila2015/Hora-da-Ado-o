@@ -2,131 +2,197 @@
 <html lang="pt">
 <head>
     <meta charset="UTF-8">
-    <title>Pesquisa de Animais por Proximidade</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agregador de Animais Seguro</title>
     <style>
-        body { font-family: Arial, sans-serif; max-width: 800px; margin: 40px auto; padding: 20px; background: #f9f9f9; }
-        .controles { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
-        input, select, button { padding: 12px; font-size: 16px; border: 1px solid #ccc; border-radius: 8px; }
-        input { flex: 2; } select { flex: 1; }
-        button { background: #007bff; color: white; cursor: pointer; border: none; }
-        .lista-animais { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 20px; }
-        .cartao { background: white; border: 1px solid #e0e0e0; padding: 15px; border-radius: 12px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-        .cartao img { max-width: 100%; height: 160px; object-fit: cover; border-radius: 8px; }
-        .botao-ir { display: block; background: #28a745; color: white; padding: 10px; text-decoration: none; border-radius: 6px; margin-top: 10px; font-weight: bold; }
-        .distancia { color: #666; font-size: 14px; margin: 5px 0; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; max-width: 900px; margin: 0 auto; padding: 20px; background: #f4f7f6; color: #333; }
+        h2 { text-align: center; color: #2c3e50; }
+        .descricao { text-align: center; color: #7f8c8d; margin-bottom: 30px; }
+        .controles { display: flex; gap: 15px; margin-bottom: 25px; flex-wrap: wrap; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        input, select, button { padding: 12px; font-size: 16px; border: 1px solid #dcdde1; border-radius: 8px; outline: none; }
+        input { flex: 2; min-width: 200px; }
+        select { flex: 1; min-width: 150px; }
+        button { background: #3498db; color: white; border: none; cursor: pointer; font-weight: bold; transition: background 0.2s; }
+        button:hover { background: #2980b9; }
+        .lista-animais { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 20px; }
+        .cartao { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border: 1px solid #e1e8ed; text-align: center; display: flex; flex-direction: column; justify-content: space-between; padding-bottom: 15px; }
+        .cartao img { width: 100%; height: 180px; object-fit: cover; }
+        .cartao-conteudo { padding: 15px; flex-grow: 1; }
+        .cartao h3 { margin: 10px 0 5px; font-size: 18px; color: #2c3e50; }
+        .tag-especie { display: inline-block; background: #e8f4fd; color: #1da1f2; padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: bold; margin-bottom: 10px; }
+        .distancia { color: #e74c3c; font-weight: bold; font-size: 14px; margin: 5px 0; }
+        .info { color: #7f8c8d; font-size: 14px; margin: 4px 0; }
+        .preco { font-size: 18px; color: #2cc36b; font-weight: bold; margin: 10px 0; }
+        .botao-ir { display: block; background: #2ecc71; color: white; padding: 12px; text-decoration: none; border-radius: 8px; margin: 0 15px; font-weight: bold; transition: background 0.2s; }
+        .botao-ir:hover { background: #27ae60; }
+        .aviso-vazio { text-align: center; grid-column: 1 / -1; padding: 40px; color: #7f8c8d; font-size: 18px; }
     </style>
 </head>
 <body>
 
-    <h2>Encontra Animais Perto de Ti</h2>
-    <p>Permite a localização para veres os animais mais próximos primeiro.</p>
+    <h2>🔍 Pesquisa de Animais Multiraças</h2>
+    <p class="descricao">Encontra criadores oficiais e associações seguras perto de ti em segundos. Altere os filtros para ordenar.</p>
     
     <div class="controles">
-        <input type="text" id="pesquisa" placeholder="Digita a raça ou espécie..." oninput="filtrarEOrdenar()">
+        <input type="text" id="pesquisa" list="sugestoes-racas" placeholder="Escreve qualquer raça (ex: Lykoi, Labrador, Persa, Siamês)..." oninput="filtrarEOrdenar()">
+        
+        <!-- O Autocomplete junta as raças conhecidas do mundo -->
+        <datalist id="sugestoes-racas">
+            <!-- Gatos -->
+            <option value="Lykoi">
+            <option value="Persa">
+            <option value="Siamês">
+            <option value="Ragdoll">
+            <option value="Maine Coon">
+            <option value="Sphynx">
+            <!-- Cães -->
+            <option value="Labrador Retriever">
+            <option value="Pastor Alemão">
+            <option value="Golden Retriever">
+            <option value="Bulldog Francês">
+            <option value="Cão de Água Português">
+            <option value="Serra da Estrela">
+        </datalist>
         
         <select id="ordenar" onchange="filtrarEOrdenar()">
             <option value="proximidade">Mais Perto de Mim</option>
             <option value="preco_asc">Preço: Mais Barato</option>
+            <option value="preco_desc">Preço: Mais Caro</option>
             <option value="idade_asc">Idade: Mais Novo</option>
+            <option value="idade_desc">Idade: Mais Velho</option>
         </select>
         
-        <button onclick="obterLocalizacaoUtilizador()">📍 Usar a minha localização</button>
+        <button onclick="obterLocalizacao()">📍 Ativar Proximidade</button>
     </div>
 
     <div class="lista-animais" id="resultado"></div>
 
 <script>
-// Coordenadas aproximadas de referência para o teu site calcular as distâncias
-const LOCAIS = {
-    lisboa: { lat: 38.7223, lon: -9.1393 },
+// Coordenadas das principais centrais de Associações/Canis em Portugal
+const CIDADES = {
     porto: { lat: 41.1579, lon: -8.6291 },
-    faro: { lat: 37.0179, lon: -7.9308 }
+    lisboa: { lat: 38.7223, lon: -9.1393 },
+    faro: { lat: 37.0179, lon: -7.9308 },
+    coimbra: { lat: 40.2033, lon: -8.4103 }
 };
 
-// Base de dados de teste com Associações Reais e Seguras em Portugal
+// Links 100% seguros e oficiais para redirecionamento inteligente por Espécie
+const LINKS_GERAIS = {
+    Gato: "https://animaisderua.org", // Página geral de gatos da Animais de Rua
+    Cão: "https://petify.pt/find/shelters" // Agregador nacional de abrigos verificados
+};
+
+// Base de dados flexível com anúncios específicos
 const baseDados = [
-    { especie: "Cão", raca: "Labrador", idade: 3, preco: 0, local: LOCAIS.lisboa, cidade: "Lisboa", associacao: "LPDA", imagem: "https://placedog.net", url: "https://lpda.pt" },
-    { especie: "Gato", raca: "Persa", idade: 12, preco: 0, local: LOCAIS.porto, cidade: "Porto", associacao: "Animais de Rua", imagem: "https://unsplash.com", url: "https://animaisderua.org" },
-    { especie: "Cão", raca: "SRD (Rafeiro)", idade: 24, preco: 0, local: LOCAIS.faro, cidade: "Faro", associacao: "Canil Municipal", imagem: "https://placedog.net", url: "https://pan.com.pt" }
+    { especie: "Gato", raca: "Persa", nome: "Mia", idade: 2, preco: 0, local: CIDADES.porto, cidade: "Porto", fonte: "Animais de Rua", imagem: "https://unsplash.com", url: "https://animaisderua.org" },
+    { especie: "Gato", raca: "Lykoi", nome: "Gato Lobo", idade: 5, preco: 0, local: CIDADES.coimbra, cidade: "Coimbra", fonte: "Animais de Rua (Geral)", imagem: "https://unsplash.com", url: "https://animaisderua.org" },
+    { especie: "Cão", raca: "Labrador Retriever", nome: "Boby", idade: 3, preco: 450, local: CIDADES.lisboa, cidade: "Lisboa", fonte: "Criador Registado CPC", imagem: "https://placedog.net", url: "https://www.cpc.pt/registos/lista-de-ninhadas/" },
+    { especie: "Cão", raca: "Pastor Alemão", nome: "Max", idade: 12, preco: 0, local: CIDADES.faro, cidade: "Faro", fonte: "Canil Municipal", imagem: "https://placedog.net", url: "https://petify.pt/find/shelters" },
+    { especie: "Gato", raca: "Siamês", nome: "Suki", idade: 8, preco: 0, local: CIDADES.lisboa, cidade: "Lisboa", fonte: "União Zoófila", imagem: "https://unsplash.com", url: "https://www.uniaozoofila.org" },
+    { especie: "Cão", raca: "Cão de Água Português", nome: "Tejo", idade: 4, preco: 600, local: CIDADES.porto, cidade: "Porto", fonte: "Criador Oficial", imagem: "https://placedog.net", url: "https://www.cpc.pt" }
 ];
 
-let coordenadasUtilizador = null;
+let localizacaoUser = null;
 
-// Função para pedir a localização do utilizador
-function obterLocalizacaoUtilizador() {
+function obterLocalizacao() {
     if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(position => {
-            coordenadasUtilizador = {
-                lat: position.coords.latitude,
-                lon: position.coords.longitude
-            };
-            alert("Localização obtida com sucesso! A ordenar por proximidade.");
+        navigator.geolocation.getCurrentPosition(pos => {
+            localizacaoUser = { lat: pos.coords.latitude, lon: pos.coords.longitude };
+            alert("Proximidade ativada com sucesso!");
             filtrarEOrdenar();
         }, () => {
-            alert("Não foi possível obter a tua localização. Usaremos Lisboa por defeito.");
-            coordenadasUtilizador = LOCAIS.lisboa;
+            alert("Acesso negado. A usar Lisboa como centro.");
+            localizacaoUser = CIDADES.lisboa;
             filtrarEOrdenar();
         });
     }
 }
 
-// Fórmula matemática oficial (Haversine) para calcular distância entre duas coordenadas
 function calcularDistancia(lat1, lon1, lat2, lon2) {
-    const R = 6371; // Raio da Terra em km
+    const R = 6371;
     const dLat = (lat2 - lat1) * Math.PI / 180;
     const dLon = (lon2 - lon1) * Math.PI / 180;
-    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
-              Math.sin(dLon/2) * Math.sin(dLon/2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-    return R * c;
+    const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon/2) * Math.sin(dLon/2);
+    return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
 }
 
 function filtrarEOrdenar() {
-    let termo = document.getElementById('pesquisa').value.toLowerCase();
+    let termo = document.getElementById('pesquisa').value.trim().toLowerCase();
     let ordenacao = document.getElementById('ordenar').value;
     let content = document.getElementById('resultado');
     
-    // Filtrar
+    // Filtrar dados da tabela
     let filtrados = baseDados.filter(item => 
         item.raca.toLowerCase().includes(termo) || item.especie.toLowerCase().includes(termo)
     );
 
-    // Calcular distâncias se a localização estiver ativa
-    filtrados.forEach(item => {
-        if (coordenadasUtilizador) {
-            item.distancia = calcularDistancia(coordenadasUtilizador.lat, coordenadasUtilizador.lon, item.local.lat, item.local.lon);
-        } else {
-            item.distancia = null; // Sem localização ativa
+    // SE A RAÇA NÃO EXISTIR NA TABELA, O SISTEMA REDIRECIONA PARA UM LINK SEGURO DO MUNDO DAQUELA ESPÉCIE
+    if (filtrados.length === 0 && termo.length > 0) {
+        let especieDetetada = "Cão"; 
+        // Identificação rápida se o utilizador está a tentar procurar um gato do mundo (ex: Lykoi, Persa)
+        if (["lykoi", "gato", "persa", "siames", "ragdoll", "coon", "sphynx"].some(g => termo.includes(g))) {
+            especieDetetada = "Gato";
         }
-    });
-
-    // Ordenar
-    if (ordenacao === "preco_asc") filtrados.sort((a, b) => a.preco - b.preco);
-    if (ordenacao === "idade_asc") filtrados.sort((a, b) => a.idade - b.idade);
-    if (ordenacao === "proximidade" && coordenadasUtilizador) {
-        filtrados.sort((a, b) => a.distancia - b.distancia);
+        
+        content.innerHTML = `
+            <div class="cartao" style="grid-column: 1/-1;">
+                <div class="cartao-conteudo">
+                    <span class="tag-especie">${especieDetetada}</span>
+                    <h3>Procura global por: "${document.getElementById('pesquisa').value}"</h3>
+                    <p class="info">Não temos nenhum anúncio ativo desta raça exata neste momento.</p>
+                    <p class="info">Clique abaixo para ir para o portal oficial 100% seguro procurar criadores ou adoções ativas da espécie.</p>
+                    <p class="preco">Pesquisa Segura Garantida</p>
+                </div>
+                <a href="${LINKS_GERAIS[especieDetetada]}" target="_blank" class="botao-ir">Pesquisar em Portal Seguro</a>
+            </div>
+        `;
+        return;
     }
 
-    // Mostrar no ecrã
+    // Calcular distâncias
+    filtrados.forEach(item => {
+        item.distancia = localizacaoUser ? calcularDistancia(localizacaoUser.lat, localizacaoUser.lon, item.local.lat, item.local.lon) : 999999;
+    });
+
+    // Aplicar ordenações solicitadas
+    if (ordenacao === "preco_asc") filtrados.sort((a, b) => a.preco - b.preco);
+    if (ordenacao === "preco_desc") filtrados.sort((a, b) => b.preco - a.preco);
+    if (ordenacao === "idade_asc") filtrados.sort((a, b) => a.idade - b.idade);
+    if (ordenacao === "idade_desc") filtrados.sort((a, b) => b.idade - a.idade);
+    if (ordenacao === "proximidade" && localizacaoUser) filtrados.sort((a, b) => a.distancia - b.distancia);
+
+    // Renderizar cartões
     content.innerHTML = "";
     filtrados.forEach(item => {
-        let textoDistancia = item.distancia ? `${item.distancia.toFixed(1)} km de ti (${item.cidade})` : `Local: ${item.cidade}`;
+        let txtDistancia = localizacaoUser ? `📍 A ${item.distancia.toFixed(1)} km de ti` : `📍 Distrito: ${item.cidade}`;
         content.innerHTML += `
             <div class="cartao">
                 <img src="${item.imagem}" alt="${item.raca}">
-                <h3>${item.especie} - ${item.raca}</h3>
-                <p class="distancia">📍 ${textoDistancia}</p>
-                <p>Associação: ${item.associacao}</p>
-                <p>Idade: ${item.idade} meses</p>
-                <p><strong>${item.preco === 0 ? 'Adoção Grátis' : item.preco + '€'}</strong></p>
-                <a href="${item.url}" target="_blank" class="botao-ir">Ver Anúncio Seguro</a>
+                <div class="cartao-conteudo">
+    // Renderizar cartões no ecrã
+    content.innerHTML = "";
+    filtrados.forEach(item => {
+        let txtDistancia = localizacaoUser ? `📍 A ${item.distancia.toFixed(1)} km de ti` : `📍 Distrito: ${item.cidade}`;
+        
+        content.innerHTML += `
+            <div class="cartao">
+                <img src="${item.imagem}" alt="${item.raca}">
+                <div class="cartao-conteudo">
+                    <span class="tag-especie">${item.especie}</span>
+                    <h3>${item.raca}</h3>
+                    <p class="distancia">${txtDistancia}</p>
+                    <p class="info"><strong>Nome:</strong> ${item.nome}</p>
+                    <p class="info"><strong>Idade:</strong> ${item.idade} meses</p>
+                    <p class="info"><strong>Origem:</strong> ${item.fonte}</p>
+                    <p class="preco">${item.preco === 0 ? 'Adoção Gratuita' : item.preco + '€'}</p>
+                </div>
+                <a href="${item.url}" target="_blank" class="botao-ir">Ver no Site Seguro</a>
             </div>
         `;
     });
 }
 
-// Inicializar a página
+// Inicializar lista completa ao abrir a página
 filtrarEOrdenar();
 </script>
 </body>
