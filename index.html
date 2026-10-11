@@ -36,16 +36,13 @@
     <div class="controles">
         <input type="text" id="pesquisa" list="sugestoes-racas" placeholder="Escreve qualquer raça (ex: Lykoi, Labrador, Persa, Siamês)..." oninput="filtrarEOrdenar()">
         
-        <!-- O Autocomplete junta as raças conhecidas do mundo -->
         <datalist id="sugestoes-racas">
-            <!-- Gatos -->
             <option value="Lykoi">
             <option value="Persa">
             <option value="Siamês">
             <option value="Ragdoll">
             <option value="Maine Coon">
             <option value="Sphynx">
-            <!-- Cães -->
             <option value="Labrador Retriever">
             <option value="Pastor Alemão">
             <option value="Golden Retriever">
@@ -66,9 +63,7 @@
     </div>
 
     <div class="lista-animais" id="resultado"></div>
-
 <script>
-// Coordenadas das principais centrais de Associações/Canis em Portugal
 const CIDADES = {
     porto: { lat: 41.1579, lon: -8.6291 },
     lisboa: { lat: 38.7223, lon: -9.1393 },
@@ -76,20 +71,18 @@ const CIDADES = {
     coimbra: { lat: 40.2033, lon: -8.4103 }
 };
 
-// Links 100% seguros e oficiais para redirecionamento inteligente por Espécie
 const LINKS_GERAIS = {
-    Gato: "https://animaisderua.org", // Página geral de gatos da Animais de Rua
-    Cão: "https://petify.pt/find/shelters" // Agregador nacional de abrigos verificados
+    Gato: "https://animaisderua.org",
+    Cão: "https://petify.pt"
 };
 
-// Base de dados flexível com anúncios específicos
 const baseDados = [
     { especie: "Gato", raca: "Persa", nome: "Mia", idade: 2, preco: 0, local: CIDADES.porto, cidade: "Porto", fonte: "Animais de Rua", imagem: "https://unsplash.com", url: "https://animaisderua.org" },
     { especie: "Gato", raca: "Lykoi", nome: "Gato Lobo", idade: 5, preco: 0, local: CIDADES.coimbra, cidade: "Coimbra", fonte: "Animais de Rua (Geral)", imagem: "https://unsplash.com", url: "https://animaisderua.org" },
-    { especie: "Cão", raca: "Labrador Retriever", nome: "Boby", idade: 3, preco: 450, local: CIDADES.lisboa, cidade: "Lisboa", fonte: "Criador Registado CPC", imagem: "https://placedog.net", url: "https://www.cpc.pt/registos/lista-de-ninhadas/" },
-    { especie: "Cão", raca: "Pastor Alemão", nome: "Max", idade: 12, preco: 0, local: CIDADES.faro, cidade: "Faro", fonte: "Canil Municipal", imagem: "https://placedog.net", url: "https://petify.pt/find/shelters" },
-    { especie: "Gato", raca: "Siamês", nome: "Suki", idade: 8, preco: 0, local: CIDADES.lisboa, cidade: "Lisboa", fonte: "União Zoófila", imagem: "https://unsplash.com", url: "https://www.uniaozoofila.org" },
-    { especie: "Cão", raca: "Cão de Água Português", nome: "Tejo", idade: 4, preco: 600, local: CIDADES.porto, cidade: "Porto", fonte: "Criador Oficial", imagem: "https://placedog.net", url: "https://www.cpc.pt" }
+    { especie: "Cão", raca: "Labrador Retriever", nome: "Boby", idade: 3, preco: 450, local: CIDADES.lisboa, cidade: "Lisboa", fonte: "Criador Registado CPC", imagem: "https://unsplash.com", url: "https://cpc.pt" },
+    { especie: "Cão", raca: "Pastor Alemão", nome: "Max", idade: 12, preco: 0, local: CIDADES.faro, cidade: "Faro", fonte: "Canil Municipal", imagem: "https://unsplash.com", url: "https://petify.pt" },
+    { especie: "Gato", raca: "Siamês", nome: "Suki", idade: 8, preco: 0, local: CIDADES.lisboa, cidade: "Lisboa", fonte: "União Zoófila", imagem: "https://unsplash.com", url: "https://uniaozoofila.org" },
+    { especie: "Cão", raca: "Cão de Água Português", nome: "Tejo", idade: 4, preco: 600, local: CIDADES.porto, cidade: "Porto", fonte: "Criador Oficial", imagem: "https://unsplash.com", url: "https://cpc.pt" }
 ];
 
 let localizacaoUser = null;
@@ -121,15 +114,12 @@ function filtrarEOrdenar() {
     let ordenacao = document.getElementById('ordenar').value;
     let content = document.getElementById('resultado');
     
-    // Filtrar dados da tabela
     let filtrados = baseDados.filter(item => 
         item.raca.toLowerCase().includes(termo) || item.especie.toLowerCase().includes(termo)
     );
 
-    // SE A RAÇA NÃO EXISTIR NA TABELA, O SISTEMA REDIRECIONA PARA UM LINK SEGURO DO MUNDO DAQUELA ESPÉCIE
     if (filtrados.length === 0 && termo.length > 0) {
         let especieDetetada = "Cão"; 
-        // Identificação rápida se o utilizador está a tentar procurar um gato do mundo (ex: Lykoi, Persa)
         if (["lykoi", "gato", "persa", "siames", "ragdoll", "coon", "sphynx"].some(g => termo.includes(g))) {
             especieDetetada = "Gato";
         }
@@ -149,31 +139,19 @@ function filtrarEOrdenar() {
         return;
     }
 
-    // Calcular distâncias
     filtrados.forEach(item => {
         item.distancia = localizacaoUser ? calcularDistancia(localizacaoUser.lat, localizacaoUser.lon, item.local.lat, item.local.lon) : 999999;
     });
 
-    // Aplicar ordenações solicitadas
     if (ordenacao === "preco_asc") filtrados.sort((a, b) => a.preco - b.preco);
     if (ordenacao === "preco_desc") filtrados.sort((a, b) => b.preco - a.preco);
     if (ordenacao === "idade_asc") filtrados.sort((a, b) => a.idade - b.idade);
     if (ordenacao === "idade_desc") filtrados.sort((a, b) => b.idade - a.idade);
     if (ordenacao === "proximidade" && localizacaoUser) filtrados.sort((a, b) => a.distancia - b.distancia);
 
-    // Renderizar cartões
     content.innerHTML = "";
     filtrados.forEach(item => {
         let txtDistancia = localizacaoUser ? `📍 A ${item.distancia.toFixed(1)} km de ti` : `📍 Distrito: ${item.cidade}`;
-        content.innerHTML += `
-            <div class="cartao">
-                <img src="${item.imagem}" alt="${item.raca}">
-                <div class="cartao-conteudo">
-    // Renderizar cartões no ecrã
-    content.innerHTML = "";
-    filtrados.forEach(item => {
-        let txtDistancia = localizacaoUser ? `📍 A ${item.distancia.toFixed(1)} km de ti` : `📍 Distrito: ${item.cidade}`;
-        
         content.innerHTML += `
             <div class="cartao">
                 <img src="${item.imagem}" alt="${item.raca}">
@@ -192,7 +170,6 @@ function filtrarEOrdenar() {
     });
 }
 
-// Inicializar lista completa ao abrir a página
 filtrarEOrdenar();
 </script>
 </body>
