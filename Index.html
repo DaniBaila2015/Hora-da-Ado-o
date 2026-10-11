@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <title>Pesquisa de Animais</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 40px auto; padding: 20px; }
+        .controles { display: flex; gap: 10px; margin-bottom: 20px; }
+        input, select { padding: 10px; font-size: 16px; flex: 1; border: 1px solid #ccc; border-radius: 5px; }
+        .lista-animais { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; }
+        .cartao { border: 1px solid #ddd; padding: 15px; border-radius: 8px; text-align: center; box-shadow: 2px 2px 5px rgba(0,0,0,0.05); }
+        .cartao img { max-width: 100%; height: 150px; object-fit: cover; border-radius: 5px; }
+        .botao-ir { display: inline-block; background: #28a745; color: white; padding: 8px 15px; text-decoration: none; border-radius: 5px; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+    <h2>Encontre o seu Animal (Adoção ou Compra)</h2>
+    
+    <div class="controles">
+        <!-- Autocomplete Nativo com Datalist -->
+        <input type="text" id="pesquisa" list="lista-sugestoes" placeholder="Digite a raça ou animal (ex: Labrador, Persa)..." oninput="filtrarEOrdenar()">
+        <datalist id="lista-sugestoes">
+            <option value="Labrador (Cão)">
+            <option value="Persa (Gato)">
+            <option value="Canário (Pássaro)">
+        </datalist>
+
+        <select id="ordenar" onchange="filtrarEOrdenar()">
+            <option value="relevancia">Relevância</option>
+            <option value="preco_asc">Preço: Mais Barato</option>
+            <option value="preco_desc">Preço: Mais Caro</option>
+            <option value="idade_asc">Idade: Mais Novo</option>
+            <option value="idade_desc">Idade: Mais Velho</option>
+        </select>
+    </div>
+
+    <div class="lista-animais" id="resultado"></div>
+
+<script>
+// Exemplo de dados que viriam do teu Google Sheets
+const baseDados = [
+    { especie: "Cão", raca: "Labrador", idade: 3, preco: 250, imagem: "https://placedog.net", url: "https://site-do-vendedor-seguro.com", relevancia: 5, data: "2026-10-01" },
+    { especie: "Gato", raca: "Persa", idade: 12, preco: 0, imagem: "https://placekitten.com", url: "https://associacao-segura.org", relevancia: 4, data: "2026-10-05" },
+    { especie: "Pássaro", raca: "Canário", idade: 6, preco: 20, imagem: "https://placeholder.com", url: "https://loja-aves.com", relevancia: 3, data: "2026-09-28" }
+];
+
+function filtrarEOrdenar() {
+    let termo = document.getElementById('pesquisa').value.toLowerCase();
+    let ordenacao = document.getElementById('ordenar').value;
+    let content = document.getElementById('resultado');
+    
+    // 1. Filtrar pela pesquisa
+    let filtrados = baseDados.filter(item => 
+        item.raca.toLowerCase().includes(termo) || item.especie.toLowerCase().includes(termo)
+    );
+
+    // 2. Ordenar os resultados
+    if (ordenacao === "preco_asc") filtrados.sort((a, b) => a.preco - b.preco);
+    if (ordenacao === "preco_desc") filtrados.sort((a, b) => b.preco - a.preco);
+    if (ordenacao === "idade_asc") filtrados.sort((a, b) => a.idade - b.idade);
+    if (ordenacao === "idade_desc") filtrados.sort((a, b) => b.idade - a.idade);
+
+    // 3. Mostrar no ecrã
+    content.innerHTML = "";
+    filtrados.forEach(item => {
+        content.innerHTML += `
+            <div class="cartao">
+                <img src="${item.imagem}" alt="${item.raca}">
+                <h3>${item.raca}</h3>
+                <p>Idade: ${item.idade} meses</p>
+                <p><strong>${item.preco === 0 ? 'Adoção Grátis' : item.preco + '€'}</strong></p>
+                <a href="${item.url}" target="_blank" class="botao-ir">Ver no Site Seguro</a>
+            </div>
+        `;
+    });
+}
+
+// Executa a primeira vez para mostrar todos
+filtrarEOrdenar();
+</script>
+</body>
+</html>
