@@ -2,81 +2,131 @@
 <html lang="pt">
 <head>
     <meta charset="UTF-8">
-    <title>Pesquisa de Animais</title>
+    <title>Pesquisa de Animais por Proximidade</title>
     <style>
-        body { font-family: Arial, sans-serif; max-width: 800px; margin: 40px auto; padding: 20px; }
-        .controles { display: flex; gap: 10px; margin-bottom: 20px; }
-        input, select { padding: 10px; font-size: 16px; flex: 1; border: 1px solid #ccc; border-radius: 5px; }
-        .lista-animais { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; }
-        .cartao { border: 1px solid #ddd; padding: 15px; border-radius: 8px; text-align: center; box-shadow: 2px 2px 5px rgba(0,0,0,0.05); }
-        .cartao img { max-width: 100%; height: 150px; object-fit: cover; border-radius: 5px; }
-        .botao-ir { display: inline-block; background: #28a745; color: white; padding: 8px 15px; text-decoration: none; border-radius: 5px; margin-top: 10px; }
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 40px auto; padding: 20px; background: #f9f9f9; }
+        .controles { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+        input, select, button { padding: 12px; font-size: 16px; border: 1px solid #ccc; border-radius: 8px; }
+        input { flex: 2; } select { flex: 1; }
+        button { background: #007bff; color: white; cursor: pointer; border: none; }
+        .lista-animais { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 20px; }
+        .cartao { background: white; border: 1px solid #e0e0e0; padding: 15px; border-radius: 12px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .cartao img { max-width: 100%; height: 160px; object-fit: cover; border-radius: 8px; }
+        .botao-ir { display: block; background: #28a745; color: white; padding: 10px; text-decoration: none; border-radius: 6px; margin-top: 10px; font-weight: bold; }
+        .distancia { color: #666; font-size: 14px; margin: 5px 0; }
     </style>
 </head>
 <body>
 
-    <h2>Encontre o seu Animal (Adoção ou Compra)</h2>
+    <h2>Encontra Animais Perto de Ti</h2>
+    <p>Permite a localização para veres os animais mais próximos primeiro.</p>
     
     <div class="controles">
-        <!-- Autocomplete Nativo com Datalist -->
-        <input type="text" id="pesquisa" list="lista-sugestoes" placeholder="Digite a raça ou animal (ex: Labrador, Persa)..." oninput="filtrarEOrdenar()">
-        <datalist id="lista-sugestoes">
-            <option value="Labrador (Cão)">
-            <option value="Persa (Gato)">
-            <option value="Canário (Pássaro)">
-        </datalist>
-
+        <input type="text" id="pesquisa" placeholder="Digita a raça ou espécie..." oninput="filtrarEOrdenar()">
+        
         <select id="ordenar" onchange="filtrarEOrdenar()">
-            <option value="relevancia">Relevância</option>
+            <option value="proximidade">Mais Perto de Mim</option>
             <option value="preco_asc">Preço: Mais Barato</option>
-            <option value="preco_desc">Preço: Mais Caro</option>
             <option value="idade_asc">Idade: Mais Novo</option>
-            <option value="idade_desc">Idade: Mais Velho</option>
         </select>
+        
+        <button onclick="obterLocalizacaoUtilizador()">📍 Usar a minha localização</button>
     </div>
 
     <div class="lista-animais" id="resultado"></div>
 
 <script>
-// Exemplo de dados que viriam do teu Google Sheets
+// Coordenadas aproximadas de referência para o teu site calcular as distâncias
+const LOCAIS = {
+    lisboa: { lat: 38.7223, lon: -9.1393 },
+    porto: { lat: 41.1579, lon: -8.6291 },
+    faro: { lat: 37.0179, lon: -7.9308 }
+};
+
+// Base de dados de teste com Associações Reais e Seguras em Portugal
 const baseDados = [
-    { especie: "Cão", raca: "Labrador", idade: 3, preco: 250, imagem: "https://placedog.net", url: "https://site-do-vendedor-seguro.com", relevancia: 5, data: "2026-10-01" },
-    { especie: "Gato", raca: "Persa", idade: 12, preco: 0, imagem: "https://placekitten.com", url: "https://associacao-segura.org", relevancia: 4, data: "2026-10-05" },
-    { especie: "Pássaro", raca: "Canário", idade: 6, preco: 20, imagem: "https://placeholder.com", url: "https://loja-aves.com", relevancia: 3, data: "2026-09-28" }
+    { especie: "Cão", raca: "Labrador", idade: 3, preco: 0, local: LOCAIS.lisboa, cidade: "Lisboa", associacao: "LPDA", imagem: "https://placedog.net", url: "https://lpda.pt" },
+    { especie: "Gato", raca: "Persa", idade: 12, preco: 0, local: LOCAIS.porto, cidade: "Porto", associacao: "Animais de Rua", imagem: "https://unsplash.com", url: "https://animaisderua.org" },
+    { especie: "Cão", raca: "SRD (Rafeiro)", idade: 24, preco: 0, local: LOCAIS.faro, cidade: "Faro", associacao: "Canil Municipal", imagem: "https://placedog.net", url: "https://pan.com.pt" }
 ];
+
+let coordenadasUtilizador = null;
+
+// Função para pedir a localização do utilizador
+function obterLocalizacaoUtilizador() {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(position => {
+            coordenadasUtilizador = {
+                lat: position.coords.latitude,
+                lon: position.coords.longitude
+            };
+            alert("Localização obtida com sucesso! A ordenar por proximidade.");
+            filtrarEOrdenar();
+        }, () => {
+            alert("Não foi possível obter a tua localização. Usaremos Lisboa por defeito.");
+            coordenadasUtilizador = LOCAIS.lisboa;
+            filtrarEOrdenar();
+        });
+    }
+}
+
+// Fórmula matemática oficial (Haversine) para calcular distância entre duas coordenadas
+function calcularDistancia(lat1, lon1, lat2, lon2) {
+    const R = 6371; // Raio da Terra em km
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+              Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c;
+}
 
 function filtrarEOrdenar() {
     let termo = document.getElementById('pesquisa').value.toLowerCase();
     let ordenacao = document.getElementById('ordenar').value;
     let content = document.getElementById('resultado');
     
-    // 1. Filtrar pela pesquisa
+    // Filtrar
     let filtrados = baseDados.filter(item => 
         item.raca.toLowerCase().includes(termo) || item.especie.toLowerCase().includes(termo)
     );
 
-    // 2. Ordenar os resultados
-    if (ordenacao === "preco_asc") filtrados.sort((a, b) => a.preco - b.preco);
-    if (ordenacao === "preco_desc") filtrados.sort((a, b) => b.preco - a.preco);
-    if (ordenacao === "idade_asc") filtrados.sort((a, b) => a.idade - b.idade);
-    if (ordenacao === "idade_desc") filtrados.sort((a, b) => b.idade - a.idade);
+    // Calcular distâncias se a localização estiver ativa
+    filtrados.forEach(item => {
+        if (coordenadasUtilizador) {
+            item.distancia = calcularDistancia(coordenadasUtilizador.lat, coordenadasUtilizador.lon, item.local.lat, item.local.lon);
+        } else {
+            item.distancia = null; // Sem localização ativa
+        }
+    });
 
-    // 3. Mostrar no ecrã
+    // Ordenar
+    if (ordenacao === "preco_asc") filtrados.sort((a, b) => a.preco - b.preco);
+    if (ordenacao === "idade_asc") filtrados.sort((a, b) => a.idade - b.idade);
+    if (ordenacao === "proximidade" && coordenadasUtilizador) {
+        filtrados.sort((a, b) => a.distancia - b.distancia);
+    }
+
+    // Mostrar no ecrã
     content.innerHTML = "";
     filtrados.forEach(item => {
+        let textoDistancia = item.distancia ? `${item.distancia.toFixed(1)} km de ti (${item.cidade})` : `Local: ${item.cidade}`;
         content.innerHTML += `
             <div class="cartao">
                 <img src="${item.imagem}" alt="${item.raca}">
-                <h3>${item.raca}</h3>
+                <h3>${item.especie} - ${item.raca}</h3>
+                <p class="distancia">📍 ${textoDistancia}</p>
+                <p>Associação: ${item.associacao}</p>
                 <p>Idade: ${item.idade} meses</p>
                 <p><strong>${item.preco === 0 ? 'Adoção Grátis' : item.preco + '€'}</strong></p>
-                <a href="${item.url}" target="_blank" class="botao-ir">Ver no Site Seguro</a>
+                <a href="${item.url}" target="_blank" class="botao-ir">Ver Anúncio Seguro</a>
             </div>
         `;
     });
 }
 
-// Executa a primeira vez para mostrar todos
+// Inicializar a página
 filtrarEOrdenar();
 </script>
 </body>
